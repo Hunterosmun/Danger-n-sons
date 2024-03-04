@@ -1,0 +1,23 @@
+{
+  "name": "danger-n-sons",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "python3 -m http.server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hunterosmun/Danger-n-sons.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hunterosmun/Danger-n-sons/issues"
+  },
+  "homepage": "https://github.com/Hunterosmun/Danger-n-sons#readme",
+  "dependencies": {
+    "pixi.js": "^7.4.0"
+  }
+}
