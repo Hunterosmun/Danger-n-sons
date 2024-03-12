@@ -3,19 +3,22 @@ import { createGameState } from './game-state.js'
 
 const game = createGameState()
 
-const app = new PIXI.Application({
+const app = new PIXI.Application()
+await app.init({
   background: '#1099bb',
   resizeTo: window,
 })
 
-document.body.appendChild(app.view)
+document.body.appendChild(app.canvas)
 
 const { pos, border } = game.loop(0)
 
 const middleX = app.screen.width / 2
 const middleY = app.screen.height / 2
 
-const bunny = PIXI.Sprite.from('https://pixijs.com/assets/bunny.png')
+const bunnyURL = 'https://pixijs.com/assets/bunny.png'
+const bunnyTexture = await PIXI.Assets.load(bunnyURL)
+const bunny = PIXI.Sprite.from(bunnyTexture)
 bunny.anchor.set(0.5, 0.5)
 bunny.x = middleX
 bunny.y = middleY
@@ -23,8 +26,8 @@ bunny.y = middleY
 const background = new PIXI.Container()
 
 const borderGraphics = new PIXI.Graphics()
-borderGraphics.lineStyle(1, '0x000000')
-borderGraphics.drawRect(0, 0, border.width, border.height)
+  .rect(0, 0, border.width, border.height)
+  .stroke({ width: 1, color: '0x000000' })
 
 background.addChild(borderGraphics)
 
@@ -33,7 +36,7 @@ app.stage.addChild(background)
 
 // Listen for animate update
 app.ticker.add((delta) => {
-  const { pos, spin } = game.loop(delta)
+  const { pos, spin } = game.loop(delta.deltaTime)
   const middleX = app.screen.width / 2
   const middleY = app.screen.height / 2
 
@@ -43,5 +46,5 @@ app.ticker.add((delta) => {
   background.x = middleX + (border.x - pos.x)
   background.y = middleY + (border.y - pos.y)
 
-  if (spin) bunny.rotation += 0.1 * delta
+  if (spin) bunny.rotation += delta.deltaTime
 })
