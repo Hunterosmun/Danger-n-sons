@@ -11,7 +11,7 @@ await app.init({
 
 document.body.appendChild(app.canvas)
 
-const { pos, border } = game.loop(0)
+const { pos, border, groundItems } = game.loop(0)
 
 const middleX = app.screen.width / 2
 const middleY = app.screen.height / 2
@@ -23,7 +23,24 @@ bunny.anchor.set(0.5, 0.5)
 bunny.x = middleX
 bunny.y = middleY
 
+const pizzaTexture = await PIXI.Assets.load('/assets/coolPizza.png')
+
 const background = new PIXI.Container()
+
+const items = {}
+
+Object.values(groundItems).forEach((item) => {
+  if (item.type === 'pizza') {
+    const pizza = new PIXI.Sprite(pizzaTexture)
+    pizza.anchor.set(0.5)
+    pizza.x = 0 - border.x + item.x
+    pizza.y = 0 - border.y + item.y
+    pizza.width = 200
+    pizza.height = 100
+    background.addChild(pizza)
+    items[item.id] = pizza
+  }
+})
 
 const borderGraphics = new PIXI.Graphics()
   .rect(0, 0, border.width, border.height)
@@ -47,4 +64,7 @@ app.ticker.add((delta) => {
   background.y = middleY + (border.y - pos.y)
 
   if (spin) bunny.rotation += delta.deltaTime
+  for (const id of Object.keys(items)) {
+    if (!groundItems[id]) items[id].removeFromParent()
+  }
 })

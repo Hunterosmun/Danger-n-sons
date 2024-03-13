@@ -19,5 +19,14 @@ export function createKeyState() {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
     },
+    onKeyPress(callback) {
+      function handleKeyPress(e) {
+        callback(e.code)
+      }
+      window.addEventListener('keypress', handleKeyPress)
+      return () => {
+        window.removeEventListener('keypress', handleKeyPress)
+      }
+    },
   }
 }
