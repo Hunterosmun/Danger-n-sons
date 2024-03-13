@@ -29,6 +29,7 @@ export function createGameState() {
     y: -100,
     // Note: Pizza, like all other items, will be kickable (in order to get it to your ship).
     // We will have to show a scene of Danger telling his sons to wash their feet before kicking pizza, for sanitary reasons
+    // Also potentially a disclaimer stating we do not condone the kicking of innocent, non-warcrime-committing pizza.
   })
 
   keyState.onKeyPress((code) => {
@@ -38,7 +39,7 @@ export function createGameState() {
           return isClose(pos, item, 16)
         })
         if (itemPickedUp) {
-          delete groundItems[itemPickedUp.id]
+          groundItems[itemPickedUp.id].isHeld = true
           inventory.push(itemPickedUp)
         }
         break

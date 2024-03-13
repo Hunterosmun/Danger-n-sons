@@ -27,8 +27,6 @@ const pizzaTexture = await PIXI.Assets.load('/assets/coolPizza.png')
 
 const background = new PIXI.Container()
 
-const items = {}
-
 Object.values(groundItems).forEach((item) => {
   if (item.type === 'pizza') {
     const pizza = new PIXI.Sprite(pizzaTexture)
@@ -38,7 +36,7 @@ Object.values(groundItems).forEach((item) => {
     pizza.width = 200
     pizza.height = 100
     background.addChild(pizza)
-    items[item.id] = pizza
+    item.ref = pizza
   }
 })
 
@@ -64,7 +62,8 @@ app.ticker.add((delta) => {
   background.y = middleY + (border.y - pos.y)
 
   if (spin) bunny.rotation += delta.deltaTime
-  for (const id of Object.keys(items)) {
-    if (!groundItems[id]) items[id].removeFromParent()
-  }
+
+  Object.values(groundItems).forEach((item) => {
+    if (item.isHeld) item.ref.removeFromParent()
+  })
 })
