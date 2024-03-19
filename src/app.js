@@ -23,7 +23,7 @@ bunny.anchor.set(0.5, 0.5)
 bunny.x = middleX
 bunny.y = middleY
 
-const pizzaTexture = await PIXI.Assets.load('/assets/coolPizza.png')
+const pizzaTexture = await PIXI.Assets.load('/assets/pizza.png')
 
 const background = new PIXI.Container()
 
@@ -33,8 +33,6 @@ Object.values(groundItems).forEach((item) => {
     pizza.anchor.set(0.5)
     pizza.x = 0 - border.x + item.x
     pizza.y = 0 - border.y + item.y
-    pizza.width = 200
-    pizza.height = 100
     background.addChild(pizza)
     item.ref = pizza
   }
