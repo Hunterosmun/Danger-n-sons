@@ -1,0 +1,33 @@
+
+
+World needs to be able to ask Systems what components they care about
+Then it needs to be able to get the entities with those components
+Then call the Systems tick/update/execute with that list
+
+
+Entity -> Player
+  Component -> Position
+  Component -> Velocity
+  Component -> Inventory
+  Component -> Graphics (sprite)
+  Component -> Collision
+  Component -> Controllable
+
+Entity -> Item
+  Component -> Position
+  Component -> Graphics (sprite)
+  Component -> Acquire-able
+
+Entity -> Wall
+  Component -> Graphics
+  Component -> Position
+  Component -> Collision
+  (Using the wall entites to make our outer boundary)
+
+Entity -> Enemy
+
+Systems:                   Components it acts on:
+  KeyboardInputSystem   ->  [Controllable, Velocity]
+  MovementSystem        ->  [Velocity, Position] (Maybe Collision?)
+    Hunter thinks we should have a separate system for collision, but we're gonna try adding it into movement
+  GraphicsSystem        ->  [Graphics, Position]
