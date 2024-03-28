@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Hunterosmun/Danger-n-sons#readme",
   "dependencies": {
+    "@ksmithut/ecs": "^0.0.0-alpha.1",
     "pixi.js": "^8.0.1"
   }
 }

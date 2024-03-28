@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js'
-import * as ecs from './ecs.js'
-import v from './validate.js'
+import * as ecs from '@ksmithut/ecs'
+import v from '@ksmithut/ecs/validate'
 
 // 1: Create components
 const positionComponent = ecs.createComponent(
