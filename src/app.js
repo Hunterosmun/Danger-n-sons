@@ -2,6 +2,9 @@ import * as PIXI from 'pixi.js'
 import * as ecs from '@ksmithut/ecs'
 import v from '@ksmithut/ecs/validate'
 
+// May need this soon for the next version of KECS
+// const { v: { default: v}} = ecs
+
 // 1: Create components
 const positionComponent = ecs.createComponent(
   v.object({
@@ -22,6 +25,15 @@ const playerControlledComponent = ecs.createComponent(v.undefined())
 const graphicsComponent = ecs.createComponent(
   v.object({
     pixiObject: v.or(v.instanceOf(PIXI.Graphics), v.instanceOf(PIXI.Sprite)),
+  })
+)
+
+const itemComponent = ecs.createComponent(v.undefined())
+
+const inventoryComponent = ecs.createComponent(
+  v.object({
+    maxItems: v.number(),
+    items: v.array(v.object({})),
   })
 )
 
@@ -54,6 +66,7 @@ const KEY_BINDINGS = {
   RUN: 'ShiftLeft',
   SPIN: 'Space',
   INTERACT: 'KeyE',
+  DROP: 'KeyQ',
 }
 
 const keyboardInputSystem = ecs.createSystem(
@@ -138,6 +151,75 @@ const backgroundSystem = ecs.createSystem(
   }
 )
 
+const interactSystem = ecs.createSystem(
+  v.object({
+    window: v.instanceOf(Window),
+    pressed: v.boolean(),
+  }),
+  {
+    players: [positionComponent, playerControlledComponent, inventoryComponent],
+    items: [itemComponent, positionComponent],
+  },
+  (state, delta, { players, items }) => {
+    if (!state.pressed) return
+    state.pressed = false
+    const playerEntity = Array.from(players)[0]
+    const player = ecs.getComponent(playerEntity, positionComponent)
+    const inventory = ecs.getComponent(playerEntity, inventoryComponent)
+    if (inventory.items.length < inventory.maxItems) {
+      for (const item of items) {
+        const pos = ecs.getComponent(item, positionComponent)
+        const distance = Math.abs(player.x - pos.x) + Math.abs(player.y - pos.y)
+        if (distance < 20) {
+          ecs.removeComponent(item, positionComponent)
+          inventory.items.push(item)
+          return
+        }
+      }
+    }
+    // Here is where we'll do other interact stuff (like open doors or kick friends)
+  },
+  (state) => {
+    function handleKeyDown(e) {
+      if (e.code === KEY_BINDINGS.INTERACT) state.pressed = true
+    }
+    state.window.addEventListener('keypress', handleKeyDown)
+    return () => {
+      state.window.removeEventListener('keypress', handleKeyDown)
+    }
+  }
+)
+
+const dropSystem = ecs.createSystem(
+  v.object({
+    window: v.instanceOf(Window),
+    pressed: v.boolean(),
+  }),
+  {
+    players: [positionComponent, playerControlledComponent, inventoryComponent],
+  },
+  (state, delta, { players }) => {
+    if (!state.drop) return
+    state.drop = false
+    const playerEntity = Array.from(players)[0]
+    const player = ecs.getComponent(playerEntity, positionComponent)
+    const inventory = ecs.getComponent(playerEntity, inventoryComponent)
+    if (inventory.items.length) {
+      const item = inventory.items.pop()
+      ecs.addComponent(item, positionComponent, { x: player.x, y: player.y })
+    }
+  },
+  (state) => {
+    function handleKeyDown(e) {
+      if (e.code === KEY_BINDINGS.DROP) state.drop = true
+    }
+    state.window.addEventListener('keypress', handleKeyDown)
+    return () => {
+      state.window.removeEventListener('keypress', handleKeyDown)
+    }
+  }
+)
+
 // 3: Create world
 const app = new PIXI.Application()
 await app.init({
@@ -166,19 +248,43 @@ const world = ecs
   })
   .registerSystem(physicsSystem, null)
   .registerSystem(backgroundSystem, { background, screen: app.screen })
+  .registerSystem(interactSystem, { window, pressed: false })
+  .registerSystem(dropSystem, { window, drop: false })
   .registerSystem(graphicsSystem, { container: background })
 
 // 4: Create entities
 
-const bunnyURL = 'https://pixijs.com/assets/bunny.png'
-const bunnyTexture = await PIXI.Assets.load(bunnyURL)
-const bunny = PIXI.Sprite.from(bunnyTexture)
+await PIXI.Assets.load([
+  { alias: 'bunny', src: 'https://pixijs.com/assets/bunny.png' },
+  { alias: 'pizza', src: '/assets/pizza.png' },
+])
 
 const player = world.createEntity()
+const bunny = PIXI.Sprite.from('bunny')
+bunny.anchor.set(0.5)
+bunny.zIndex = 1
 ecs.addComponent(player, positionComponent, { x: 250, y: 250 })
 ecs.addComponent(player, velocityComponent, { x: 0, y: 0 })
 ecs.addComponent(player, playerControlledComponent, undefined)
 ecs.addComponent(player, graphicsComponent, { pixiObject: bunny })
+ecs.addComponent(player, inventoryComponent, { maxItems: 4, items: [] })
+
+function addPizza(x, y) {
+  const pizza = world.createEntity()
+  const pizzaSprite = PIXI.Sprite.from('pizza')
+  pizzaSprite.anchor.set(0.5)
+  pizzaSprite.width = 50
+  pizzaSprite.height = 50
+  ecs.addComponent(pizza, positionComponent, { x, y })
+  ecs.addComponent(pizza, itemComponent, undefined)
+  ecs.addComponent(pizza, graphicsComponent, { pixiObject: pizzaSprite })
+}
+
+addPizza(100, 100)
+addPizza(300, 300)
+addPizza(100, 300)
+addPizza(300, 100)
+addPizza(500, 500)
 
 // 5: Start the game loop
 app.ticker.add((ticker) => {
