@@ -44,13 +44,19 @@ const graphicsSystem = ecs.createSystem(
   }),
   { entities: [positionComponent, graphicsComponent] },
   ({ container }, delta, { entities }) => {
-    for (const entity of entities) {
+    for (const entity of entities.results) {
       const { x, y } = ecs.getComponent(entity, positionComponent)
       const { pixiObject } = ecs.getComponent(entity, graphicsComponent)
       pixiObject.x = x
       pixiObject.y = y
-      if (ecs.isAdded(entities, entity)) container.addChild(pixiObject)
-      if (ecs.isRemoved(entities, entity)) pixiObject.removeFromParent()
+    }
+    for (const entity of entities.added) {
+      const { pixiObject } = ecs.getComponent(entity, graphicsComponent)
+      container.addChild(pixiObject)
+    }
+    for (const entity of entities.removed) {
+      const { pixiObject } = ecs.getRemovedComponent(entity, graphicsComponent)
+      container.removeChild(pixiObject)
     }
   }
 )
@@ -80,7 +86,7 @@ const keyboardInputSystem = ecs.createSystem(
   }),
   { entities: [velocityComponent, playerControlledComponent] },
   ({ up, down, left, right, running }, delta, { entities }) => {
-    for (const entity of entities) {
+    for (const entity of entities.results) {
       const entityVelocity = ecs.getComponent(entity, velocityComponent)
 
       let velocity = SPEED
@@ -124,7 +130,7 @@ const physicsSystem = ecs.createSystem(
   v.null(),
   { entities: [positionComponent, velocityComponent] },
   (state, delta, { entities }) => {
-    for (const entity of entities) {
+    for (const entity of entities.results) {
       const position = ecs.getComponent(entity, positionComponent)
       const { x: x, y: y } = ecs.getComponent(entity, velocityComponent)
       position.x += x * delta
@@ -143,7 +149,7 @@ const backgroundSystem = ecs.createSystem(
     const middleX = screen.width / 2
     const middleY = screen.height / 2
 
-    for (const player of players) {
+    for (const player of players.results) {
       const { x, y } = ecs.getComponent(player, positionComponent)
       background.x = middleX - x
       background.y = middleY - y
@@ -163,11 +169,11 @@ const interactSystem = ecs.createSystem(
   (state, delta, { players, items }) => {
     if (!state.pressed) return
     state.pressed = false
-    const playerEntity = Array.from(players)[0]
+    const playerEntity = Array.from(players.results)[0]
     const player = ecs.getComponent(playerEntity, positionComponent)
     const inventory = ecs.getComponent(playerEntity, inventoryComponent)
     if (inventory.items.length < inventory.maxItems) {
-      for (const item of items) {
+      for (const item of items.results) {
         const pos = ecs.getComponent(item, positionComponent)
         const distance = Math.abs(player.x - pos.x) + Math.abs(player.y - pos.y)
         if (distance < 20) {
@@ -201,7 +207,7 @@ const dropSystem = ecs.createSystem(
   (state, delta, { players }) => {
     if (!state.drop) return
     state.drop = false
-    const playerEntity = Array.from(players)[0]
+    const playerEntity = Array.from(players.results)[0]
     const player = ecs.getComponent(playerEntity, positionComponent)
     const inventory = ecs.getComponent(playerEntity, inventoryComponent)
     if (inventory.items.length) {
