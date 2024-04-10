@@ -21,6 +21,7 @@ const velocityComponent = ecs.createComponent(
 )
 
 const playerControlledComponent = ecs.createComponent(v.undefined())
+const possessedByPlayerComponent = ecs.createComponent(v.undefined())
 
 const graphicsComponent = ecs.createComponent(
   v.object({
@@ -179,6 +180,7 @@ const interactSystem = ecs.createSystem(
         if (distance < 20) {
           ecs.removeComponent(item, positionComponent)
           inventory.items.push(item)
+          ecs.addComponent(item, possessedByPlayerComponent, undefined)
           return
         }
       }
@@ -213,6 +215,7 @@ const dropSystem = ecs.createSystem(
     if (inventory.items.length) {
       const item = inventory.items.pop()
       ecs.addComponent(item, positionComponent, { x: player.x, y: player.y })
+      ecs.removeComponent(item, possessedByPlayerComponent)
     }
   },
   (state) => {
@@ -226,6 +229,27 @@ const dropSystem = ecs.createSystem(
   }
 )
 
+const inventoryGraphicsSystem = ecs.createSystem(
+  v.object({ container: v.instanceOf(PIXI.Container) }),
+  { items: [itemComponent, graphicsComponent, possessedByPlayerComponent] },
+  ({ container }, delta, { items }) => {
+    for (const item of items.added) {
+      const { pixiObject } = ecs.getComponent(item, graphicsComponent)
+      container.addChild(pixiObject)
+    }
+    let offset = 40
+    for (const item of items.results) {
+      const { pixiObject } = ecs.getComponent(item, graphicsComponent)
+      pixiObject.x = 40
+      pixiObject.y = offset += 40
+    }
+    for (const item of items.removed) {
+      const { pixiObject } = ecs.getRemovedComponent(item, graphicsComponent)
+      container.removeChild(pixiObject)
+    }
+  }
+)
+
 // 3: Create world
 const app = new PIXI.Application()
 await app.init({
@@ -233,8 +257,10 @@ await app.init({
   resizeTo: window,
 })
 
+const inventoryContainer = new PIXI.Container()
 const background = new PIXI.Container()
 app.stage.addChild(background)
+app.stage.addChild(inventoryContainer)
 document.body.appendChild(app.canvas)
 
 const borderGraphics = new PIXI.Graphics()
@@ -256,6 +282,7 @@ const world = ecs
   .registerSystem(backgroundSystem, { background, screen: app.screen })
   .registerSystem(interactSystem, { window, pressed: false })
   .registerSystem(dropSystem, { window, drop: false })
+  .registerSystem(inventoryGraphicsSystem, { container: inventoryContainer })
   .registerSystem(graphicsSystem, { container: background })
 
 // 4: Create entities
