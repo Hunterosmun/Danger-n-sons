@@ -1,256 +1,23 @@
 import * as PIXI from 'pixi.js'
 import * as ecs from '@ksmithut/ecs'
-import v from '@ksmithut/ecs/validate'
 
-// May need this soon for the next version of KECS
-// const { v: { default: v}} = ecs
+import {
+  positionComponent,
+  velocityComponent,
+  graphicsComponent,
+  playerControlledComponent,
+  inventoryComponent,
+  itemComponent,
+} from './components.js'
 
-// 1: Create components
-const positionComponent = ecs.createComponent(
-  v.object({
-    x: v.number(),
-    y: v.number(),
-  })
-)
+import { graphicsSystem } from './systems/graphics.js'
+import { keyboardInputSystem } from './systems/keyboardInput.js'
+import { physicsSystem } from './systems/physics.js'
+import { backgroundSystem } from './systems/background.js'
+import { interactSystem } from './systems/interact.js'
+import { dropSystem } from './systems/drop.js'
+import { inventoryGraphicsSystem } from './systems/inventoryGraphics.js'
 
-const velocityComponent = ecs.createComponent(
-  v.object({
-    x: v.number(),
-    y: v.number(),
-  })
-)
-
-const playerControlledComponent = ecs.createComponent(v.undefined())
-const possessedByPlayerComponent = ecs.createComponent(v.undefined())
-
-const graphicsComponent = ecs.createComponent(
-  v.object({
-    pixiObject: v.or(v.instanceOf(PIXI.Graphics), v.instanceOf(PIXI.Sprite)),
-  })
-)
-
-const itemComponent = ecs.createComponent(v.undefined())
-
-const inventoryComponent = ecs.createComponent(
-  v.object({
-    maxItems: v.number(),
-    items: v.array(v.object({})),
-  })
-)
-
-// 2: Create systems
-const graphicsSystem = ecs.createSystem(
-  v.object({
-    container: v.instanceOf(PIXI.Container),
-  }),
-  { entities: [positionComponent, graphicsComponent] },
-  ({ container }, delta, { entities }) => {
-    for (const entity of entities.results) {
-      const { x, y } = ecs.getComponent(entity, positionComponent)
-      const { pixiObject } = ecs.getComponent(entity, graphicsComponent)
-      pixiObject.x = x
-      pixiObject.y = y
-    }
-    for (const entity of entities.added) {
-      const { pixiObject } = ecs.getComponent(entity, graphicsComponent)
-      container.addChild(pixiObject)
-    }
-    for (const entity of entities.removed) {
-      const { pixiObject } = ecs.getRemovedComponent(entity, graphicsComponent)
-      container.removeChild(pixiObject)
-    }
-  }
-)
-
-const DIAGONAL_RADIANS = Math.sin(Math.PI / 4)
-const SPEED = 100
-const RUN_MODIFIER = 2
-const KEY_BINDINGS = {
-  MOVE_UP: 'KeyW',
-  MOVE_DOWN: 'KeyS',
-  MOVE_LEFT: 'KeyA',
-  MOVE_RIGHT: 'KeyD',
-  RUN: 'ShiftLeft',
-  SPIN: 'Space',
-  INTERACT: 'KeyE',
-  DROP: 'KeyQ',
-}
-
-const keyboardInputSystem = ecs.createSystem(
-  v.object({
-    up: v.boolean(),
-    down: v.boolean(),
-    left: v.boolean(),
-    right: v.boolean(),
-    running: v.boolean(),
-    window: v.instanceOf(Window),
-  }),
-  { entities: [velocityComponent, playerControlledComponent] },
-  ({ up, down, left, right, running }, delta, { entities }) => {
-    for (const entity of entities.results) {
-      const entityVelocity = ecs.getComponent(entity, velocityComponent)
-
-      let velocity = SPEED
-      if (running) velocity *= RUN_MODIFIER
-      const goinDiagonal = up !== down && left !== right
-      if (goinDiagonal) velocity * -DIAGONAL_RADIANS
-
-      entityVelocity.x = 0
-      entityVelocity.y = 0
-      if (up) entityVelocity.y = -velocity
-      if (down) entityVelocity.y = velocity
-      if (left) entityVelocity.x = -velocity
-      if (right) entityVelocity.x = velocity
-    }
-  },
-  (state) => {
-    function handleKeyDown(e) {
-      if (e.code === KEY_BINDINGS.MOVE_UP) state.up = true
-      if (e.code === KEY_BINDINGS.MOVE_DOWN) state.down = true
-      if (e.code === KEY_BINDINGS.MOVE_LEFT) state.left = true
-      if (e.code === KEY_BINDINGS.MOVE_RIGHT) state.right = true
-      if (e.code === KEY_BINDINGS.RUN) state.running = true
-    }
-    function handleKeyUp(e) {
-      if (e.code === KEY_BINDINGS.MOVE_UP) state.up = false
-      if (e.code === KEY_BINDINGS.MOVE_DOWN) state.down = false
-      if (e.code === KEY_BINDINGS.MOVE_LEFT) state.left = false
-      if (e.code === KEY_BINDINGS.MOVE_RIGHT) state.right = false
-      if (e.code === KEY_BINDINGS.RUN) state.running = false
-    }
-    state.window.addEventListener('keydown', handleKeyDown)
-    state.window.addEventListener('keyup', handleKeyUp)
-    return () => {
-      state.window.removeEventListener('keydown', handleKeyDown)
-      state.window.removeEventListener('keyup', handleKeyUp)
-    }
-  }
-)
-
-const physicsSystem = ecs.createSystem(
-  v.null(),
-  { entities: [positionComponent, velocityComponent] },
-  (state, delta, { entities }) => {
-    for (const entity of entities.results) {
-      const position = ecs.getComponent(entity, positionComponent)
-      const { x: x, y: y } = ecs.getComponent(entity, velocityComponent)
-      position.x += x * delta
-      position.y += y * delta
-    }
-  }
-)
-
-const backgroundSystem = ecs.createSystem(
-  v.object({
-    background: v.instanceOf(PIXI.Container),
-    screen: v.instanceOf(PIXI.Rectangle),
-  }),
-  { players: [positionComponent, playerControlledComponent] },
-  ({ background, screen }, delta, { players }) => {
-    const middleX = screen.width / 2
-    const middleY = screen.height / 2
-
-    for (const player of players.results) {
-      const { x, y } = ecs.getComponent(player, positionComponent)
-      background.x = middleX - x
-      background.y = middleY - y
-    }
-  }
-)
-
-const interactSystem = ecs.createSystem(
-  v.object({
-    window: v.instanceOf(Window),
-    pressed: v.boolean(),
-  }),
-  {
-    players: [positionComponent, playerControlledComponent, inventoryComponent],
-    items: [itemComponent, positionComponent],
-  },
-  (state, delta, { players, items }) => {
-    if (!state.pressed) return
-    state.pressed = false
-    const playerEntity = Array.from(players.results)[0]
-    const player = ecs.getComponent(playerEntity, positionComponent)
-    const inventory = ecs.getComponent(playerEntity, inventoryComponent)
-    if (inventory.items.length < inventory.maxItems) {
-      for (const item of items.results) {
-        const pos = ecs.getComponent(item, positionComponent)
-        const distance = Math.abs(player.x - pos.x) + Math.abs(player.y - pos.y)
-        if (distance < 20) {
-          ecs.removeComponent(item, positionComponent)
-          inventory.items.push(item)
-          ecs.addComponent(item, possessedByPlayerComponent, undefined)
-          return
-        }
-      }
-    }
-    // Here is where we'll do other interact stuff (like open doors or kick friends)
-  },
-  (state) => {
-    function handleKeyDown(e) {
-      if (e.code === KEY_BINDINGS.INTERACT) state.pressed = true
-    }
-    state.window.addEventListener('keypress', handleKeyDown)
-    return () => {
-      state.window.removeEventListener('keypress', handleKeyDown)
-    }
-  }
-)
-
-const dropSystem = ecs.createSystem(
-  v.object({
-    window: v.instanceOf(Window),
-    pressed: v.boolean(),
-  }),
-  {
-    players: [positionComponent, playerControlledComponent, inventoryComponent],
-  },
-  (state, delta, { players }) => {
-    if (!state.drop) return
-    state.drop = false
-    const playerEntity = Array.from(players.results)[0]
-    const player = ecs.getComponent(playerEntity, positionComponent)
-    const inventory = ecs.getComponent(playerEntity, inventoryComponent)
-    if (inventory.items.length) {
-      const item = inventory.items.pop()
-      ecs.addComponent(item, positionComponent, { x: player.x, y: player.y })
-      ecs.removeComponent(item, possessedByPlayerComponent)
-    }
-  },
-  (state) => {
-    function handleKeyDown(e) {
-      if (e.code === KEY_BINDINGS.DROP) state.drop = true
-    }
-    state.window.addEventListener('keypress', handleKeyDown)
-    return () => {
-      state.window.removeEventListener('keypress', handleKeyDown)
-    }
-  }
-)
-
-const inventoryGraphicsSystem = ecs.createSystem(
-  v.object({ container: v.instanceOf(PIXI.Container) }),
-  { items: [itemComponent, graphicsComponent, possessedByPlayerComponent] },
-  ({ container }, delta, { items }) => {
-    for (const item of items.added) {
-      const { pixiObject } = ecs.getComponent(item, graphicsComponent)
-      container.addChild(pixiObject)
-    }
-    let offset = 40
-    for (const item of items.results) {
-      const { pixiObject } = ecs.getComponent(item, graphicsComponent)
-      pixiObject.x = 40
-      pixiObject.y = offset += 40
-    }
-    for (const item of items.removed) {
-      const { pixiObject } = ecs.getRemovedComponent(item, graphicsComponent)
-      container.removeChild(pixiObject)
-    }
-  }
-)
-
-// 3: Create world
 const app = new PIXI.Application()
 await app.init({
   background: '#1099bb',
@@ -263,10 +30,10 @@ app.stage.addChild(background)
 app.stage.addChild(inventoryContainer)
 document.body.appendChild(app.canvas)
 
-const borderGraphics = new PIXI.Graphics()
-  .rect(0, 0, 500, 500)
-  .stroke({ width: 1, color: '#000000' })
-background.addChild(borderGraphics)
+// const borderGraphics = new PIXI.Graphics()
+//   .rect(0, 0, 500, 500)
+//   .stroke({ width: 1, color: '#000000' })
+// background.addChild(borderGraphics)
 
 const world = ecs
   .createWorld()
