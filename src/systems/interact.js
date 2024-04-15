@@ -7,6 +7,7 @@ import {
   inventoryComponent,
   possessedByPlayerComponent,
   itemComponent,
+  velocityComponent,
 } from '../components.js'
 import { KEY_BINDINGS } from '../constants.js'
 
@@ -31,9 +32,27 @@ export const interactSystem = ecs.createSystem(
         const distance = Math.abs(player.x - pos.x) + Math.abs(player.y - pos.y)
         if (distance < 20) {
           ecs.removeComponent(item, positionComponent)
+          ecs.removeComponent(item, velocityComponent)
           inventory.items.push(item)
           ecs.addComponent(item, possessedByPlayerComponent, undefined)
           return
+        }
+      }
+    } else {
+      for (const item of items.results) {
+        const pos = ecs.getComponent(item, positionComponent)
+        const xDist = player.x - pos.x
+        const yDist = player.y - pos.y
+        const distance = Math.abs(xDist) + Math.abs(yDist)
+        const KICKING_SPEED = 50
+        const PROXIMITY = 20
+        if (distance < PROXIMITY) {
+          const xSpeed = (xDist / PROXIMITY) * KICKING_SPEED + KICKING_SPEED
+          const ySpeed = (yDist / PROXIMITY) * KICKING_SPEED + KICKING_SPEED
+          ecs.addComponent(item, velocityComponent, {
+            x: xDist < 0 ? xSpeed : -xSpeed,
+            y: yDist < 0 ? ySpeed : -ySpeed,
+          })
         }
       }
     }

@@ -8,9 +8,9 @@ export const physicsSystem = ecs.createSystem(
   (state, delta, { entities }) => {
     for (const entity of entities.results) {
       const position = ecs.getComponent(entity, positionComponent)
-      const { x: x, y: y } = ecs.getComponent(entity, velocityComponent)
-      position.x += x * delta
-      position.y += y * delta
+      const velocity = ecs.getComponent(entity, velocityComponent)
+      position.x += velocity.x * delta
+      position.y += velocity.y * delta
     }
   }
 )
