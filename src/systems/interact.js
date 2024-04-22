@@ -41,11 +41,13 @@ export const interactSystem = ecs.createSystem(
     } else {
       for (const item of items.results) {
         const pos = ecs.getComponent(item, positionComponent)
-        const xDist = player.x - pos.x
-        const yDist = player.y - pos.y
+        const xDist = pos.x - player.x
+        const yDist = pos.y - player.y
         const distance = Math.abs(xDist) + Math.abs(yDist)
-        const KICKING_SPEED = 100
         const PROXIMITY = 40
+        const MAX_KICKING_SPEED = 100
+        const KICKING_SPEED =
+          MAX_KICKING_SPEED - MAX_KICKING_SPEED * (distance / PROXIMITY)
         if (distance < PROXIMITY) {
           const h = Math.sqrt(xDist ** 2 + yDist ** 2)
           const ratio = KICKING_SPEED / h
