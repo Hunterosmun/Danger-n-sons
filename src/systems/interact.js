@@ -8,6 +8,7 @@ import {
   possessedByPlayerComponent,
   itemComponent,
   velocityComponent,
+  frictionComponent,
 } from '../components.js'
 import { KEY_BINDINGS } from '../constants.js'
 
@@ -54,6 +55,7 @@ export const interactSystem = ecs.createSystem(
           const x = xDist * ratio
           const y = yDist * ratio
           ecs.addComponent(item, velocityComponent, { x, y })
+          ecs.addComponent(item, frictionComponent, 0.3)
         }
       }
     }
