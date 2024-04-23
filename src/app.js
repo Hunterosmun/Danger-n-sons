@@ -52,22 +52,89 @@ const world = ecs
   .registerSystem(inventoryGraphicsSystem, { container: inventoryContainer })
   .registerSystem(graphicsSystem, { container: background })
 
+// 3.5: Map!
+
+/*
+  1: Wall
+  2: Pizza
+  9: Player
+  */
+const grid = `
+1111111111
+12   12121
+11    2  1
+19 2     111111111111111  1
+11     2                  1
+12                        1
+11   2   1111111  111111111
+12     2 1     1     21
+11      21     1   1  1
+12   12121     1   1  1
+1111111111     1  21  1
+               12  2  1
+    111111111111 111111
+    122          1     
+    12221111111111     
+    12221              
+    11111                
+  `
+
+function initMap(grid) {
+  const cellWidth = 50
+  const middleWidth = Math.floor(cellWidth / 2)
+  function topLeft(x, y) {
+    return { x: x * cellWidth, y: y * cellWidth }
+  }
+  function middle(x, y) {
+    const pos = topLeft(x, y)
+    return { x: pos.x + middleWidth, y: pos.y + middleWidth }
+  }
+
+  grid
+    .trim()
+    .split('\n')
+    .forEach((line, y) => {
+      return line.split('').map((cell, x) => {
+        switch (cell) {
+          case '1': {
+            const pos = topLeft(x, y)
+            addWall(pos.x, pos.y, cellWidth, cellWidth)
+            break
+          }
+          case '2': {
+            const pos = middle(x, y)
+            addPizza(pos.x, pos.y)
+            break
+          }
+          case '9': {
+            const pos = middle(x, y)
+            addPlayer(pos.x, pos.y)
+            break
+          }
+        }
+      })
+    })
+}
+
 // 4: Create entities
 
 await PIXI.Assets.load([
   { alias: 'bunny', src: 'https://pixijs.com/assets/bunny.png' },
   { alias: 'pizza', src: '/assets/pizza.png' },
 ])
+initMap(grid)
 
-const player = world.createEntity()
-const bunny = PIXI.Sprite.from('bunny')
-bunny.anchor.set(0.5)
-bunny.zIndex = 1
-ecs.addComponent(player, positionComponent, { x: 250, y: 250 })
-ecs.addComponent(player, velocityComponent, { x: 0, y: 0 })
-ecs.addComponent(player, playerControlledComponent, undefined)
-ecs.addComponent(player, graphicsComponent, { pixiObject: bunny })
-ecs.addComponent(player, inventoryComponent, { maxItems: 4, items: [] })
+function addPlayer(x, y) {
+  const player = world.createEntity()
+  const bunny = PIXI.Sprite.from('bunny')
+  bunny.anchor.set(0.5)
+  bunny.zIndex = 1
+  ecs.addComponent(player, positionComponent, { x, y })
+  ecs.addComponent(player, velocityComponent, { x: 0, y: 0 })
+  ecs.addComponent(player, playerControlledComponent, undefined)
+  ecs.addComponent(player, graphicsComponent, { pixiObject: bunny })
+  ecs.addComponent(player, inventoryComponent, { maxItems: 4, items: [] })
+}
 
 function addPizza(x, y) {
   const pizza = world.createEntity()
@@ -80,11 +147,12 @@ function addPizza(x, y) {
   ecs.addComponent(pizza, graphicsComponent, { pixiObject: pizzaSprite })
 }
 
-addPizza(100, 100)
-addPizza(300, 300)
-addPizza(100, 300)
-addPizza(300, 100)
-addPizza(500, 500)
+function addWall(x, y, w, h) {
+  const wall = world.createEntity()
+  const wallGraphics = new PIXI.Graphics().rect(0, 0, w, h).fill(0x555555)
+  ecs.addComponent(wall, positionComponent, { x, y })
+  ecs.addComponent(wall, graphicsComponent, { pixiObject: wallGraphics })
+}
 
 // 5: Start the game loop
 app.ticker.add((ticker) => {
