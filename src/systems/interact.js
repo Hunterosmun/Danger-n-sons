@@ -46,7 +46,7 @@ export const interactSystem = ecs.createSystem(
         const yDist = pos.y - player.y
         const distance = Math.abs(xDist) + Math.abs(yDist)
         const PROXIMITY = 40
-        const MAX_KICKING_SPEED = 100
+        const MAX_KICKING_SPEED = 500
         const KICKING_SPEED =
           MAX_KICKING_SPEED - MAX_KICKING_SPEED * (distance / PROXIMITY)
         if (distance < PROXIMITY) {
@@ -55,7 +55,7 @@ export const interactSystem = ecs.createSystem(
           const x = xDist * ratio
           const y = yDist * ratio
           ecs.addComponent(item, velocityComponent, { x, y })
-          ecs.addComponent(item, frictionComponent, 0.3)
+          ecs.addComponent(item, frictionComponent, 7)
         }
       }
     }
