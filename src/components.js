@@ -18,6 +18,8 @@ export const velocityComponent = ecs.createComponent(
 
 export const frictionComponent = ecs.createComponent(v.number())
 
+export const collidableComponent = ecs.createComponent(v.null())
+
 export const playerControlledComponent = ecs.createComponent(v.undefined())
 export const possessedByPlayerComponent = ecs.createComponent(v.undefined())
 

@@ -8,6 +8,7 @@ import {
   playerControlledComponent,
   inventoryComponent,
   itemComponent,
+  collidableComponent,
 } from './components.js'
 
 import { graphicsSystem } from './systems/graphics.js'
@@ -152,6 +153,7 @@ function addWall(x, y, w, h) {
   const wallGraphics = new PIXI.Graphics().rect(0, 0, w, h).fill(0x555555)
   ecs.addComponent(wall, positionComponent, { x, y })
   ecs.addComponent(wall, graphicsComponent, { pixiObject: wallGraphics })
+  ecs.addComponent(wall, collidableComponent, undefined)
 }
 
 // 5: Start the game loop
