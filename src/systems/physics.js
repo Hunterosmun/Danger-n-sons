@@ -6,6 +6,7 @@ import {
   frictionComponent,
   graphicsComponent,
   collidableComponent,
+  playerControlledComponent,
 } from '../components.js'
 
 export const physicsSystem = ecs.createSystem(
@@ -18,21 +19,30 @@ export const physicsSystem = ecs.createSystem(
     for (const entity of entities.results) {
       const position = ecs.getComponent(entity, positionComponent)
       const velocity = ecs.getComponent(entity, velocityComponent)
-      const xDist = velocity.x * delta
-      const yDist = velocity.y * delta
+      let xDist = velocity.x * delta
+      let yDist = velocity.y * delta
       if (xDist !== 0 || yDist !== 0) {
         const { pixiObject } = ecs.getComponent(entity, graphicsComponent)
         const bounds = pixiObject.getBounds()
-        bounds.x = bounds.x + xDist
-        bounds.y = bounds.y + yDist
+        const boundsX = bounds.clone()
+        boundsX.x = boundsX.x + xDist
+        const boundsY = bounds.clone()
+        boundsY.y = boundsY.y + yDist
         for (const collidable of collidables.results) {
           const { pixiObject: collidablePixiObject } = ecs.getComponent(
             collidable,
             graphicsComponent
           )
           const collidableBounds = collidablePixiObject.getBounds()
-
-          if (checkCollision(bounds, collidableBounds)) return
+          const player = ecs.hasComponent(entity, playerControlledComponent)
+          if (checkCollision(boundsX, collidableBounds)) {
+            xDist = 0
+            if (!player) velocity.x = -velocity.x
+          }
+          if (checkCollision(boundsY, collidableBounds)) {
+            yDist = 0
+            if (!player) velocity.y = -velocity.y
+          }
         }
       }
       position.x += xDist
