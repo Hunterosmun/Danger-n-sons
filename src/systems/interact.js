@@ -30,7 +30,9 @@ export const interactSystem = ecs.createSystem(
     if (inventory.items.length < inventory.maxItems) {
       for (const item of items.results) {
         const pos = ecs.getComponent(item, positionComponent)
-        const distance = Math.abs(player.x - pos.x) + Math.abs(player.y - pos.y)
+        const xDist = pos.x - player.x
+        const yDist = pos.y - player.y
+        const distance = Math.sqrt(xDist ** 2 + yDist ** 2)
         if (distance < 20) {
           ecs.removeComponent(item, positionComponent)
           ecs.removeComponent(item, velocityComponent)
@@ -44,7 +46,7 @@ export const interactSystem = ecs.createSystem(
         const pos = ecs.getComponent(item, positionComponent)
         const xDist = pos.x - player.x
         const yDist = pos.y - player.y
-        const distance = Math.abs(xDist) + Math.abs(yDist)
+        const distance = Math.sqrt(xDist ** 2 + yDist ** 2)
         const PROXIMITY = 40
         const MAX_KICKING_SPEED = 500
         const KICKING_SPEED =
