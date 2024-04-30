@@ -91,6 +91,16 @@ function initMap(grid) {
     return { x: pos.x + middleWidth, y: pos.y + middleWidth }
   }
 
+  function random(x, y, padding) {
+    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1) + min)
+    const pos = topLeft(x, y)
+    const minX = pos.x + padding
+    const maxX = pos.x + cellWidth - padding
+    const minY = pos.y + padding
+    const maxY = pos.y + cellWidth - padding
+    return { x: rand(minX, maxX), y: rand(minY, maxY) }
+  }
+
   grid
     .trim()
     .split('\n')
@@ -103,7 +113,7 @@ function initMap(grid) {
             break
           }
           case '2': {
-            const pos = middle(x, y)
+            const pos = random(x, y, 15)
             addPizza(pos.x, pos.y)
             break
           }
