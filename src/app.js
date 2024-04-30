@@ -48,7 +48,7 @@ const world = ecs
   })
   .registerSystem(physicsSystem, null)
   .registerSystem(backgroundSystem, { background, screen: app.screen })
-  .registerSystem(interactSystem, { window, pressed: false })
+  .registerSystem(interactSystem, { window, interact: false, kicking: false })
   .registerSystem(dropSystem, { window, drop: false })
   .registerSystem(inventoryGraphicsSystem, { container: inventoryContainer })
   .registerSystem(graphicsSystem, { container: background })

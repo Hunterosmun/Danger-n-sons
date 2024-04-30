@@ -4,7 +4,7 @@ export const KEY_BINDINGS = {
   MOVE_LEFT: 'KeyA',
   MOVE_RIGHT: 'KeyD',
   RUN: 'ShiftLeft',
-  SPIN: 'Space',
+  KICK: 'Space',
   INTERACT: 'KeyE',
   DROP: 'KeyQ',
 }
