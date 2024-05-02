@@ -25,16 +25,55 @@ await app.init({
   resizeTo: window,
 })
 
+await PIXI.Assets.load([
+  // { alias: 'bunny', src: 'https://pixijs.com/assets/bunny.png' },
+  { alias: 'bunny', src: '/assets/bunnyFrames.png' },
+  { alias: 'pizza', src: '/assets/pizza.png' },
+])
+
+const bunnyData = {
+  frames: {
+    up1: { frame: { x: 0, y: 0, w: 24, h: 32 } },
+    up2: { frame: { x: 24, y: 0, w: 24, h: 32 } },
+    up3: { frame: { x: 48, y: 0, w: 24, h: 32 } },
+    right1: { frame: { x: 0, y: 32, w: 24, h: 32 } },
+    right2: { frame: { x: 24, y: 32, w: 24, h: 32 } },
+    right3: { frame: { x: 48, y: 32, w: 24, h: 32 } },
+    down1: { frame: { x: 0, y: 64, w: 24, h: 32 } },
+    down2: { frame: { x: 24, y: 64, w: 24, h: 32 } },
+    down3: { frame: { x: 48, y: 64, w: 24, h: 32 } },
+    left1: { frame: { x: 0, y: 96, w: 24, h: 32 } },
+    left2: { frame: { x: 24, y: 96, w: 24, h: 32 } },
+    left3: { frame: { x: 48, y: 96, w: 24, h: 32 } },
+  },
+  meta: {
+    image: 'bunny',
+    format: 'RGBA8888',
+    size: { w: 72, h: 128 },
+    scale: 1,
+  },
+  animations: {
+    up: ['up1', 'up2', 'up3', 'up2'],
+    right: ['right1', 'right2', 'right3', 'right2'],
+    down: ['down1', 'down2', 'down3', 'down2'],
+    left: ['left1', 'left2', 'left3', 'left2'],
+  },
+}
+
+const spritesheet = new PIXI.Spritesheet(
+  PIXI.Texture.from(bunnyData.meta.image),
+  bunnyData
+)
+await spritesheet.parse()
+const anim = new PIXI.AnimatedSprite(spritesheet.animations.up)
+anim.animationSpeed = 0.1
+anim.play()
+
 const inventoryContainer = new PIXI.Container()
 const background = new PIXI.Container()
 app.stage.addChild(background)
 app.stage.addChild(inventoryContainer)
 document.body.appendChild(app.canvas)
-
-// const borderGraphics = new PIXI.Graphics()
-//   .rect(0, 0, 500, 500)
-//   .stroke({ width: 1, color: '#000000' })
-// background.addChild(borderGraphics)
 
 const world = ecs
   .createWorld()
@@ -64,8 +103,8 @@ const grid = `
 1111111111
 12   12121
 11    2  1
-19 2     111111111111111  1
-11     2                  1
+1  2     111111111111111  1
+11 9   2                  1
 12                        1
 11   2   1111111  111111111
 12     2 1     1     21
@@ -129,10 +168,6 @@ function initMap(grid) {
 
 // 4: Create entities
 
-await PIXI.Assets.load([
-  { alias: 'bunny', src: 'https://pixijs.com/assets/bunny.png' },
-  { alias: 'pizza', src: '/assets/pizza.png' },
-])
 initMap(grid)
 
 function addPlayer(x, y) {
@@ -143,7 +178,7 @@ function addPlayer(x, y) {
   ecs.addComponent(player, positionComponent, { x, y })
   ecs.addComponent(player, velocityComponent, { x: 0, y: 0 })
   ecs.addComponent(player, playerControlledComponent, undefined)
-  ecs.addComponent(player, graphicsComponent, { pixiObject: bunny })
+  ecs.addComponent(player, graphicsComponent, { pixiObject: anim })
   ecs.addComponent(player, inventoryComponent, { maxItems: 4, items: [] })
 }
 
