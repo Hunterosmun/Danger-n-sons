@@ -22,6 +22,16 @@ export const collidableComponent = ecs.createComponent(v.null())
 
 export const playerControlledComponent = ecs.createComponent(v.undefined())
 export const possessedByPlayerComponent = ecs.createComponent(v.undefined())
+export const movementAnimationComponent = ecs.createComponent(
+  v.object({
+    up: v.array(v.instanceOf(PIXI.Texture)),
+    down: v.array(v.instanceOf(PIXI.Texture)),
+    left: v.array(v.instanceOf(PIXI.Texture)),
+    right: v.array(v.instanceOf(PIXI.Texture)),
+    stopped: v.array(v.instanceOf(PIXI.Texture)),
+    animationSpeed: v.number(),
+  })
+)
 
 export const graphicsComponent = ecs.createComponent(
   v.object({

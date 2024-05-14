@@ -9,6 +9,7 @@ import {
   inventoryComponent,
   itemComponent,
   collidableComponent,
+  movementAnimationComponent,
 } from './components.js'
 
 import { graphicsSystem } from './systems/graphics.js'
@@ -18,6 +19,7 @@ import { backgroundSystem } from './systems/background.js'
 import { interactSystem } from './systems/interact.js'
 import { dropSystem } from './systems/drop.js'
 import { inventoryGraphicsSystem } from './systems/inventoryGraphics.js'
+import { playerAnimationSystem } from './systems/playerAnimation.js'
 
 const app = new PIXI.Application()
 await app.init({
@@ -57,6 +59,7 @@ const bunnyData = {
     right: ['right1', 'right2', 'right3', 'right2'],
     down: ['down1', 'down2', 'down3', 'down2'],
     left: ['left1', 'left2', 'left3', 'left2'],
+    stopped: ['down2', 'right2', 'up2', 'left2'],
   },
 }
 
@@ -65,9 +68,6 @@ const spritesheet = new PIXI.Spritesheet(
   bunnyData
 )
 await spritesheet.parse()
-const anim = new PIXI.AnimatedSprite(spritesheet.animations.up)
-anim.animationSpeed = 0.1
-anim.play()
 
 const inventoryContainer = new PIXI.Container()
 const background = new PIXI.Container()
@@ -90,6 +90,7 @@ const world = ecs
   .registerSystem(interactSystem, { window, interact: false, kicking: false })
   .registerSystem(dropSystem, { window, drop: false })
   .registerSystem(inventoryGraphicsSystem, { container: inventoryContainer })
+  .registerSystem(playerAnimationSystem, null)
   .registerSystem(graphicsSystem, { container: background })
 
 // 3.5: Map!
@@ -172,14 +173,26 @@ initMap(grid)
 
 function addPlayer(x, y) {
   const player = world.createEntity()
-  const bunny = PIXI.Sprite.from('bunny')
-  bunny.anchor.set(0.5)
-  bunny.zIndex = 1
+
+  const playerSprite = new PIXI.AnimatedSprite(spritesheet.animations.down)
+  playerSprite.animationSpeed = 0.1
+  playerSprite.play()
+  playerSprite.anchor.set(0.5)
+  playerSprite.zIndex = 1
+
   ecs.addComponent(player, positionComponent, { x, y })
   ecs.addComponent(player, velocityComponent, { x: 0, y: 0 })
   ecs.addComponent(player, playerControlledComponent, undefined)
-  ecs.addComponent(player, graphicsComponent, { pixiObject: anim })
+  ecs.addComponent(player, graphicsComponent, { pixiObject: playerSprite })
   ecs.addComponent(player, inventoryComponent, { maxItems: 4, items: [] })
+  ecs.addComponent(player, movementAnimationComponent, {
+    up: spritesheet.animations.up,
+    down: spritesheet.animations.down,
+    left: spritesheet.animations.left,
+    right: spritesheet.animations.right,
+    stopped: spritesheet.animations.stopped,
+    animationSpeed: 0.1,
+  })
 }
 
 function addPizza(x, y) {
