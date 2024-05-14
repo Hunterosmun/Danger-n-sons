@@ -18,47 +18,30 @@ export const playerAnimationSystem = ecs.createSystem(
   (state, delta, { entities }) => {
     for (const entity of entities.results) {
       const velocity = ecs.getComponent(entity, velocityComponent)
-      const movementAnimation = ecs.getComponent(
+      const { up, down, left, right } = ecs.getComponent(
         entity,
         movementAnimationComponent
       )
-      const graphics = ecs.getComponent(entity, graphicsComponent)
+      const { pixiObject } = ecs.getComponent(entity, graphicsComponent)
       if (velocity.x < 0) {
         // left
-        if (graphics.pixiObject.textures !== movementAnimation.left) {
-          graphics.pixiObject.textures = movementAnimation.left
-          graphics.pixiObject.animationSpeed = movementAnimation.animationSpeed
-          graphics.pixiObject.play()
-        }
+        if (pixiObject.textures !== left) pixiObject.textures = left
+        pixiObject.play()
       } else if (velocity.x > 0) {
         // right
-        if (graphics.pixiObject.textures !== movementAnimation.right) {
-          graphics.pixiObject.textures = movementAnimation.right
-          graphics.pixiObject.animationSpeed = movementAnimation.animationSpeed
-          graphics.pixiObject.play()
-        }
+        if (pixiObject.textures !== right) pixiObject.textures = right
+        pixiObject.play()
       } else if (velocity.y < 0) {
         // up
-        if (graphics.pixiObject.textures !== movementAnimation.up) {
-          graphics.pixiObject.textures = movementAnimation.up
-          graphics.pixiObject.animationSpeed = movementAnimation.animationSpeed
-          graphics.pixiObject.play()
-        }
+        if (pixiObject.textures !== up) pixiObject.textures = up
+        pixiObject.play()
       } else if (velocity.y > 0) {
         // down
-        if (graphics.pixiObject.textures !== movementAnimation.down) {
-          graphics.pixiObject.textures = movementAnimation.down
-          graphics.pixiObject.animationSpeed = movementAnimation.animationSpeed
-
-          graphics.pixiObject.play()
-        }
-      } else if (graphics.pixiObject.textures !== movementAnimation.stopped) {
+        if (pixiObject.textures !== down) pixiObject.textures = down
+        pixiObject.play()
+      } else {
         // stopped
-        graphics.pixiObject.textures = movementAnimation.stopped
-        graphics.pixiObject.animationSpeed =
-          movementAnimation.animationSpeed / 6
-
-        graphics.pixiObject.play()
+        pixiObject.stop()
       }
     }
   }
