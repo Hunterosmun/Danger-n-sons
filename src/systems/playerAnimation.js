@@ -18,11 +18,13 @@ export const playerAnimationSystem = ecs.createSystem(
   (state, delta, { entities }) => {
     for (const entity of entities.results) {
       const velocity = ecs.getComponent(entity, velocityComponent)
-      const { up, down, left, right } = ecs.getComponent(
-        entity,
-        movementAnimationComponent
-      )
+      const { up, down, left, right, runningThreshold, animationSpeed } =
+        ecs.getComponent(entity, movementAnimationComponent)
+      const speed = Math.sqrt(velocity.x ** 2 + velocity.y ** 2)
+
       const { pixiObject } = ecs.getComponent(entity, graphicsComponent)
+      pixiObject.animationSpeed =
+        speed > runningThreshold ? animationSpeed * 2 : animationSpeed
       if (velocity.x < 0) {
         // left
         if (pixiObject.textures !== left) pixiObject.textures = left

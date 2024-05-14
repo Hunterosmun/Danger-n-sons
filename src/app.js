@@ -191,6 +191,7 @@ function addPlayer(x, y) {
     left: spritesheet.animations.left,
     right: spritesheet.animations.right,
     stopped: spritesheet.animations.stopped,
+    runningThreshold: 195,
     animationSpeed: 0.1,
   })
 }

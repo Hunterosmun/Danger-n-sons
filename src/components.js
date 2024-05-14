@@ -29,6 +29,7 @@ export const movementAnimationComponent = ecs.createComponent(
     left: v.array(v.instanceOf(PIXI.Texture)),
     right: v.array(v.instanceOf(PIXI.Texture)),
     stopped: v.array(v.instanceOf(PIXI.Texture)),
+    runningThreshold: v.number(),
     animationSpeed: v.number(),
   })
 )
